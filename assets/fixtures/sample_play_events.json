@@ -1,0 +1,28 @@
+[
+  {
+    "app": "rekordbox",
+    "session_id": "HISTORY-001",
+    "night_date": "2025-11-12",
+    "played_at": "2025-11-12T23:10:00+00:00",
+    "title": "Song A",
+    "artist": "Artist A",
+    "album": "Album A",
+    "duration_sec": 300,
+    "deck": "A",
+    "bpm": 120,
+    "key": "8A"
+  },
+  {
+    "app": "rekordbox",
+    "session_id": "HISTORY-001",
+    "night_date": "2025-11-12",
+    "played_at": "2025-11-12T23:15:00+00:00",
+    "title": "Song B",
+    "artist": "Artist B",
+    "album": "Album B",
+    "duration_sec": 240,
+    "deck": "B",
+    "bpm": 125,
+    "key": "3B"
+  }
+]

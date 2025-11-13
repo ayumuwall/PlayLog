@@ -3,7 +3,10 @@ target-version = "py310"
 
 [lint]
 select = ["E", "F", "W", "I", "B", "UP", "S", "N", "ANN"]
-ignore = ["ANN101", "ANN102"]
+
+[lint.per-file-ignores]
+"packages/playlog-core/tests/**" = ["S101"]
+"packages/playlog-cli/tests/**" = ["S101"]
 
 [format]
 quote-style = "double"
