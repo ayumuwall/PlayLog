@@ -230,18 +230,6 @@ npm run test
 npm run dev   # Vite dev server
 ```
 
-### PlayEvent / Writer 概要
-
-- `playlog-core/playlog/models.py` で PlayEvent ・ NightSession ・ PlaylogConfig を Pydantic で定義し、`floor_by_cutoff` / `sanitize_path_component` などのユーティリティを提供しています。
-- `playlog-core/playlog/writers.py` には Writer 抽象と JSON/TXT/CSV Writer があり、`render_per_night` を使うと 1晩=1ファイルでまとめて出力できます。
-- `assets/fixtures/sample_play_events.json` を使ったユニットテスト（`pytest`）でテンプレートやサニタイズの動作を確認できます。
-
-### djay 抽出器（Task3）
-
-- `playlog-core/playlog/extractors/djay.py` に Algoriddim djay 用の抽出ロジックを実装しました。`discover_plists()` で `~/Music/djay/History/Sets/*.plist`（Windows も同等パス）を検出し、`load_session()` / `extract()` で PlayEvent + NightSession を生成します。
-- plist 内の `History Tracks` / `Root -> Tracks` などを再帰的にたどり、`Song Title` / `Title` / `StartTime` などキーの揺れにも耐えるヒューリスティックを入れています。開始時刻が欠損していても、ファイル名や mtime から night_date を推定します（cutoff=08:00 を既定）。
-- フィクスチャは `assets/fixtures/djay/*.plist` に複数用意しており、`pytest packages/playlog-core/tests/test_djay_extractor.py` で件数・night_date 推定・欠損耐性を確認できます。
-
 ### CI
 
 `.github/workflows/ci.yml` で Ubuntu / macOS / Windows 上の Python 3.12 + Node 20 による `ruff` / `mypy` / `pytest` / `npm run lint` / `npm run test` をマトリクス実行します。PR / main への push で自動起動し、全OSがGREENでないとマージできない設定です。
