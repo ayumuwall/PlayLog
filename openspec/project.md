@@ -8,10 +8,11 @@
 DJ ソフト（djay / rekordbox / Serato）からセット履歴を読み取り、1晩=1ファイルで TXT/CSV/JSON を出力するクロスプラットフォームアプリ PlayLog を提供する。Python 製の抽出コア、Typer ベース CLI、Electron+React GUI を単一リポジトリで管理し、PyInstaller でバンドルしたコアを GUI から叩く構成で配布容易性と再現性を確保する。
 
 ## Tech Stack
-- Python 3.10+（playlog-core, playlog-cli）
-- Typer / Click, structlog, pydantic, pyrekordbox, sqlcipher3-wheels
-- Node.js 20+ / Electron 28+ / React 18+ / TypeScript 5+（playlog-gui, Vite）
-- PyInstaller, electron-builder, GitHub Actions（CI/CD）
+- **Python 3.10+**: `packages/playlog-core` と `packages/playlog-cli` の共通基盤。`pydantic` でスキーマ定義、`structlog` でNDJSONロギング、`pyrekordbox` + `sqlcipher3-wheels` で暗号化DBを解析。`pytest`/`ruff`/`mypy` をCIに統合。
+- **Typer / Click**: CLIのコマンド定義。`typer` でコマンドオプションを宣言し、playlog-core のAPIを薄くラップする。
+- **Node.js 20+ / Electron 28+ / React 18+ / TypeScript 5+**: `packages/playlog-gui` を Vite で構築。Rendererは React Query + hooks、Mainは `electron-store` と PyInstallerバンドル済みplaylogバイナリの spawn 管理を担う。
+- **ビルド/配布**: PyInstallerでPythonコアを各OS向けに固め、Electronは `electron-builder` で `.dmg` / `.exe` / `.msi` を生成。CI（GitHub Actions）で3OSビルド＋Artifacts化。
+- **補助ツール**: PlaywrightでGUIスモーク、pre-commitで `ruff`/`mypy`/`pytest`/`npm test` をまとめ実行、OpenSpec `openspec/` ディレクトリで仕様を管理。
 
 ## Project Conventions
 
@@ -21,17 +22,26 @@ DJ ソフト（djay / rekordbox / Serato）からセット履歴を読み取り�
 - CLIフラグやファイル名は kebab-case、Python内部の識別子は snake_case、TSは camelCase を既定とする。
 - コメントは最小限で、推論が難しい処理や仕様依存部のみ日本語で補足する。
 
+### Repository & Documentation
+- ルート直下に `packages/`（core/cli/gui）、`assets/fixtures/`、`dist/`、`scripts/`、`openspec/` を配置するモノレポ。共通の仮想環境/Nodeバージョンは `.python-version` と `.nvmrc` で指定。
+- 仕様変更は `openspec/specs/*.md` に Proposal を追加し、`openspec/changes/` から change-id を発行。作業開始前に `openspec/AGENTS.md` のルールを必ず確認。
+- README ではGUI/CLIの利用手順、既知の制約、トラブルシューティング（SQLCipherや権限問題）を最新化し、スクリーンショット等は `assets/` に格納。
+- ログ出力方針、出力ディレクトリ階層、命名規則など運用必須情報は `AGENTS.md` と `openspec/project.md` を単一の真実源として更新する。
+
 ### Architecture Patterns
 - モノレポ構造（packages/ 配下に core・cli・gui）。共通ロジックは playlog-core に集約し、CLI/GUI からコアを呼び出す。
 - GUI は Electron Main から PyInstaller バンドル済み playlog 実行ファイルを spawn し、NDJSON ログを IPC 経由で Renderer に渡す。
 - 抽出器は DJ ソフトごとに分割した Python モジュール（djay/rekordbox/serato）。PlayEvent Pydantic モデルで統一スキーマを提供し、Writer 抽象で TXT/CSV/JSON を切り替える。
 - 出力ディレクトリ構造とログ（run log / session log）は core で一元管理し、GUI/CLI から同一コードパスを利用する。
+- 設定値（cutoff, session_gap, tz, timeline-estimate 等）は core の Config オブジェクトで管理し、CLIフラグおよびGUI設定パネルから同じキーで注入する。設定は `PlayLog Archives` 配下のrunログにも記録して再現性を確保。
+- NDJSONログは `level, ts, component, event, details` を基本フォーマットとし、Rendererは IPC で受信後にユーザーへ可視化、同時にファイルへストリーミングする。
 
 ### Testing Strategy
 - ユニット: PlayEvent モデル、Writer、各抽出器のフォーマット変換を pytest でテスト。plist / XML / crate などの fixture を assets/fixtures で管理。
 - 統合: CLI 経由で実行し、1晩=1ファイル出力・ナイト境界ロジックを検証。Serato など暗号化依存部はモック/サンプルDBで代替。
 - GUI: Playwright or Spectron 相当でレンダラーの基本導線、自動スキャン、進捗表示をスモークテスト。IPC ログ経路も検証。
 - CI は GitHub Actions（Ubuntu/macOS/Windows）で `ruff`, `mypy`, `pytest`, `npm run lint`, `npm run test` を並列実行する。
+- PyInstaller/Electronビルドは専用GitHub Actionsワークフローで smoke run。Artifactsに `.dmg` / `.exe` を保存し、開発者はローカルで `scripts/verify_env.py` を用いて依存チェックする。
 
 ### Git Workflow
 - main ブランチ保護。作業は feature/<topic> ブランチで実施し、PR は OpenSpec 承認後に作成。

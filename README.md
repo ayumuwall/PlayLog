@@ -1,5 +1,7 @@
 # PlayLog
 
+[![CI](https://github.com/ayumu/PlayLog/actions/workflows/ci.yml/badge.svg)](https://github.com/ayumu/PlayLog/actions/workflows/ci.yml)
+
 DJ / トラックメイカー向けの  
 **「プレイ履歴を、夜ごとのログとしてまとめて残す」** デスクトップアプリ（になる予定）です。
 
@@ -149,6 +151,20 @@ PlayLog の設計方針：
 
 ここから先は、**開発に参加したい人向け**の内容です。
 
+### リポジトリ構成
+
+```
+repo/
+  packages/
+    playlog-core/   # Python抽出コア
+    playlog-cli/    # TyperベースCLI
+    playlog-gui/    # Electron + React GUI
+  assets/fixtures/  # フィクスチャ格納
+  dist/             # ビルド成果物
+  scripts/          # 開発支援スクリプト
+  openspec/         # 仕様＆変更管理
+```
+
 ### 技術スタック
 
 - コアロジック（`playlog-core`, `playlog-cli`）
@@ -190,6 +206,33 @@ repo/
 
 詳細な仕様と、Codex / AI コーディングエージェント向けのタスク分割は
 `AGENTS.md` にまとめてあります。
+
+### ローカルセットアップ
+
+Python 側:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e "packages/playlog-core[dev]" -e "packages/playlog-cli[dev]"
+ruff check .
+mypy packages/playlog-core/playlog packages/playlog-cli/playlog_cli
+pytest
+```
+
+GUI 側:
+
+```bash
+cd packages/playlog-gui
+npm install
+npm run lint
+npm run test
+npm run dev   # Vite dev server
+```
+
+### CI
+
+`.github/workflows/ci.yml` で Ubuntu / macOS / Windows 上の Python 3.12 + Node 20 による `ruff` / `mypy` / `pytest` / `npm run lint` / `npm run test` をマトリクス実行します。PR / main への push で自動起動し、全OSがGREENでないとマージできない設定です。
 
 ---
 

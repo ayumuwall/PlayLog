@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+packages/playlog-gui/dist/
+packages/playlog-gui/out/
+.DS_Store
+
+# Build artifacts
+dist/*
+!dist/.gitkeep
+*.log
+coverage.xml
+.coverage
+
+# JetBrains / VSCode
+.idea/
+.vscode/
