@@ -3,6 +3,8 @@
 
 These instructions are for AI assistants working in this project.
 
+> **OpenSpec優先**: 本ドキュメントは OpenSpec 導入前に作成されたため、内容が矛盾する場合は **OpenSpec ワークフロー（`openspec/AGENTS.md`）を常に優先**してください。
+
 Always open `@/openspec/AGENTS.md` when the request:
 - Mentions planning or proposals (words like proposal, spec, change, plan)
 - Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
@@ -12,6 +14,10 @@ Use `@/openspec/AGENTS.md` to learn:
 - How to create and apply change proposals
 - Spec format and conventions
 - Project structure and guidelines
+
+When drafting a new proposal:
+- `proposal.md` **must** include both `## Why` and `## What Changes` sections before sharing or archiving the change.
+- Proposal change-id（例: `add-foo-bar`）には、AGENTS.md ロードマップの該当タスク番号をサフィックス（`-task3` 等）として必ず付与し、どの段階の実装か分かるようにする。
 
 Keep this managed block so 'openspec update' can refresh the instructions.
 

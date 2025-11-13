@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>History Name</key>
+    <string>Club Night Main Floor</string>
+    <key>Date Started</key>
+    <date>2025-11-12T23:05:00Z</date>
+    <key>Date Ended</key>
+    <date>2025-11-13T00:10:00Z</date>
+    <key>Software Version</key>
+    <string>djay Pro 5.0</string>
+    <key>History Tracks</key>
+    <array>
+        <dict>
+            <key>Song Title</key>
+            <string>Set Song A</string>
+            <key>Artist</key>
+            <string>DJ Alpha</string>
+            <key>Album</key>
+            <string>Live Cuts</string>
+            <key>Start Time</key>
+            <date>2025-11-12T23:10:00Z</date>
+            <key>End Time</key>
+            <date>2025-11-12T23:15:00Z</date>
+            <key>Deck</key>
+            <string>A</string>
+            <key>Duration</key>
+            <integer>300</integer>
+            <key>BPM</key>
+            <integer>122</integer>
+            <key>Key</key>
+            <string>7A</string>
+            <key>Location</key>
+            <string>/Music/SetSongA.mp3</string>
+            <key>Persistent ID</key>
+            <string>TRACK001</string>
+        </dict>
+        <dict>
+            <key>Song Title</key>
+            <string>Set Song B</string>
+            <key>Artist</key>
+            <string>DJ Alpha</string>
+            <key>Album</key>
+            <string>Live Cuts</string>
+            <key>Start Time</key>
+            <date>2025-11-12T23:18:00Z</date>
+            <key>Deck</key>
+            <string>B</string>
+            <key>Duration</key>
+            <integer>260</integer>
+            <key>BPM</key>
+            <integer>124</integer>
+            <key>Key</key>
+            <string>8B</string>
+            <key>Persistent ID</key>
+            <string>TRACK002</string>
+        </dict>
+    </array>
+</dict>
+</plist>
