@@ -1,4 +1,3 @@
-````markdown
 # PlayLog
 
 DJ / トラックメイカー向けの  
