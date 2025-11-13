@@ -149,90 +149,42 @@ PlayLog の設計方針：
 
 ## 開発者向けの情報
 
-ここから先は、**開発に参加したい人向け**の内容です。
+詳細仕様やタスク割りは `openspec/AGENTS.md` に集約済みです。以下は参画時に最低限押さえておきたい要点だけを抜粋しています。
 
-### リポジトリ構成
+### 最低限の構成
 
-```
-repo/
-  packages/
-    playlog-core/   # Python抽出コア
-    playlog-cli/    # TyperベースCLI
-    playlog-gui/    # Electron + React GUI
-  assets/fixtures/  # フィクスチャ格納
-  dist/             # ビルド成果物
-  scripts/          # 開発支援スクリプト
-  openspec/         # 仕様＆変更管理
-```
+| パス | 役割 |
+| --- | --- |
+| `packages/playlog-core/` | Python 製コア（スキーマ・抽出器・Writer） |
+| `packages/playlog-cli/` | Typer ベースの CLI。コアを呼び出してアーカイブを実行 |
+| `packages/playlog-gui/` | Electron + React + Vite。GUI から PyInstaller 化したコアを起動 |
+| `assets/fixtures/` | djay / rekordbox / Serato のサンプルデータ |
+| `openspec/` | 仕様と change 管理。提案はロードマップ番号付き change-id で作成 |
 
-### 技術スタック
+### 技術スタックのざっくり整理
 
-- コアロジック（`playlog-core`, `playlog-cli`）
-  - 言語: **Python 3.10+**
-  - 役割: djay / rekordbox / Serato の履歴解析、セッション分割、ファイル出力
-  - 想定ライブラリ:
-    - `pyrekordbox`, `sqlcipher3-wheels`
-    - `plistlib`, `lxml` / `xml.etree.ElementTree`
-    - `pydantic`, `click` or `typer`
+- Python 3.10+（pydantic / typer / pyrekordbox / plistlib など）で抽出と出力処理を実装。
+- TypeScript + Electron + React + Vite で GUI を構築し、バックエンドは PyInstaller でバンドルした `playlog` バイナリを spawn。
+- 配布は electron-builder（macOS `.dmg` / Windows `.exe`）を想定。
 
-- GUI（`playlog-gui`）
-  - 言語: **TypeScript**
-  - フレームワーク: **Electron + React + Vite**
-  - 役割: 起動時自動スキャン、ボタン操作、ログ表示
-
-- バンドル & 配布
-  - Python 部分を **PyInstaller** で単一バイナリ化（`playlog`）
-  - Electron 側でバイナリを同梱し、`electron-builder` で  
-    macOS `.dmg` / Windows `.exe` を生成する予定
-
-### リポジトリ構成（予定）
+### ローカル環境の最短セットアップ
 
 ```bash
-repo/
-  packages/
-    playlog-core/
-      playlog/
-      tests/
-    playlog-cli/
-    playlog-gui/
-      src/
-  assets/
-    fixtures/
-  dist/
-  scripts/
-  README.md
-  AGENTS.md
-````
-
-詳細な仕様と、Codex / AI コーディングエージェント向けのタスク分割は
-`AGENTS.md` にまとめてあります。
-
-### ローカルセットアップ
-
-Python 側:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
+# Python (core + CLI)
+python3 -m venv .venv && source .venv/bin/activate
 pip install -e "packages/playlog-core[dev]" -e "packages/playlog-cli[dev]"
-ruff check .
-mypy packages/playlog-core/playlog packages/playlog-cli/playlog_cli
-pytest
-```
+ruff check . && mypy packages/playlog-core/playlog packages/playlog-cli/playlog_cli && pytest
 
-GUI 側:
-
-```bash
+# GUI
 cd packages/playlog-gui
 npm install
-npm run lint
-npm run test
+npm run lint && npm run test
 npm run dev   # Vite dev server
 ```
 
-### CI
+### CI の前提
 
-`.github/workflows/ci.yml` で Ubuntu / macOS / Windows 上の Python 3.12 + Node 20 による `ruff` / `mypy` / `pytest` / `npm run lint` / `npm run test` をマトリクス実行します。PR / main への push で自動起動し、全OSがGREENでないとマージできない設定です。
+`.github/workflows/ci.yml` で Ubuntu / macOS / Windows × Python 3.12 / Node 20 のマトリクスを回し、`ruff` / `mypy` / `pytest` / `npm run lint` / `npm run test` がすべて成功しないとマージできません。
 
 ---
 
