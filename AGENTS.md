@@ -109,6 +109,9 @@ repo/
   1) **crate**（既定優先）: `_Serato_` 内の **History / crate** 形式を直接解析し、再生順・メタを抽出。
   2) **logs**: `_Serato_/Logs` のセッションログから補助情報を抽出（診断用のため項目は限定・欠損があり得る）。
 - **時刻情報**: crate 直解析では**曲ごとの絶対時刻が存在しないライブラリ構成もある**ため、取得できれば `played_at` として出力、無い場合は未設定。`--timeline-estimate` で推定の付加が可能（推定値）。
+- crate/history の `*.crate` ファイルは **4バイトタグ + 4バイト長 + データ**の繰り返しで構成され、`otrk` チャンク配下からタイトル/アーティスト/BPM/Deck などを抽出する。取得できた断片は `PlayEvent.raw` に格納し、欠損は `None` として扱う。
+- `_Serato_/Logs/*.log` は `Session Start @ ...` 行や `HH:MM:SS<TAB>Deck 1<TAB>Artist - Title` の並びを best-effort で解析し、ミッドナイト跨ぎは `PlayEvent.played_at` の昇順で補正する。ログに absolute 時刻が無い場合でも、開始日時はファイル名や mtime から推定する。
+- Serato セッションの night 日付は `floor_by_cutoff`（既定 08:00）で求める。`--timeline-estimate` が有効でかつ crate に時刻が存在しない場合は、セッションアンカーをファイル名／更新日時から 22:00 とみなし、曲長を積算して推定 `played_at` を生成し `timeline_mode=estimated` を付与する。
 
 ### 1.5 セッション化（ナイト単位）
 **目的**: 「1晩=1ファイル」を正しく切り出す。
@@ -206,13 +209,19 @@ Timeline: {timeline_mode}  # actual | estimated
 
 ## 4. CLI（併用）
 ```
-# 自動検出 + 既定の出力先（1晩=1ファイル）
-python -m playlog_cli run --out ~/Desktop/"PlayLog Archives" \
-  --formats json,txt,csv --per-night --night-cutoff 08:00 --session-gap 60 --tz Asia/Tokyo
+# 既定設定（djay/rekordbox/seratoすべて を自動スキャン、出力先は Desktop/PlayLog Archives）
+python -m playlog_cli run --tz Asia/Tokyo --formats json,txt,csv
 
-# Serato crate/history を直接解析
-python -m playlog_cli run --apps serato --serato-mode crate --out ~/Desktop/"PlayLog Archives" --per-night
+# Serato の crate を優先し、_Serato_ ルートを明示＆タイムライン推定を有効化
+python -m playlog_cli run --apps serato \
+  --serato-mode auto \
+  --serato-root "/Volumes/SSD/_Serato_" \
+  --timeline-estimate \
+  --formats json,txt \
+  --tz Asia/Tokyo
 ```
+
+> NOTE: `--night-cutoff` / `--session-gap` / `--per-night` などは CLI 側の次フェーズで実装予定。現行の `run` β版では Serato 向けの `--serato-mode` / `--serato-root` / `--timeline-estimate` を優先して実装している。
 
 **主なフラグ**
 - `--apps djay,rekordbox,serato`（**未指定時は all**）

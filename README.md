@@ -145,6 +145,13 @@ PlayLog の設計方針：
 - 将来的には、macOS / Windows 用のインストーラーを用意して、  
   ダウンロードしてダブルクリックするだけで使える形を目指しています。
 
+### 現在の開発進捗
+
+- ✅ **コア抽出器**: djay / rekordbox / Serato（crate・logs）に対応する Python 実装を揃え、1晩=1ファイルの Writer と合わせてユニットテスト済み。
+- ✅ **Serato Task5**: `_Serato_/History/*.crate` と `_Serato_/Logs/*.log` の両形式をパーサー化し、`--serato-mode auto|crate|logs` と `--timeline-estimate` を CLI から呼べるようになりました。GUI 側にも Serato 設定フォームを仮置きしています。
+- ✅ **テスト自動化**: `pytest packages/playlog-core/tests packages/playlog-cli/tests` と `npm run test`（GUI）がローカル/CI でグリーン。Serato 用 fixture も `assets/fixtures/serato` に追加済みです。
+- 🚧 **GUI フロー統合**: まだ PyInstaller バイナリの同梱や進捗IPCは未実装。Renderer 側に設定 UI を追加しつつ、順次バックエンドと接続していきます。
+
 ---
 
 ## 開発者向けの情報
@@ -166,6 +173,46 @@ PlayLog の設計方針：
 - Python 3.10+（pydantic / typer / pyrekordbox / plistlib など）で抽出と出力処理を実装。
 - TypeScript + Electron + React + Vite で GUI を構築し、バックエンドは PyInstaller でバンドルした `playlog` バイナリを spawn。
 - 配布は electron-builder（macOS `.dmg` / Windows `.exe`）を想定。
+
+### 現時点で動作する抽出器
+
+- **djay Sets**: `packages/playlog-core/playlog/extractors/djay.py` が `Sets/*.plist` からトラックを正規化。
+- **rekordbox HISTORY**: 同ディレクトリ内に `rekordbox.py` を追加し、`mode=auto|db|xml` で pyrekordbox→XML の順に処理します。開発時は `assets/fixtures/rekordbox/sample_history.xml` を使って XML パスを指定すると動作確認できます。
+
+```bash
+# rekordbox 抽出部のユニットテスト
+pytest packages/playlog-core -k rekordbox
+
+# XML サンプルを直接読み込むスクリプト例
+python - <<'PY'
+from pathlib import Path
+from playlog import PlaylogConfig
+from playlog.extractors import rekordbox
+
+config = PlaylogConfig(out_dir=Path('dist'), timezone='Asia/Tokyo')
+xml_path = Path('assets/fixtures/rekordbox/sample_history.xml')
+sessions = rekordbox.extract(config, mode='xml', xml_path=xml_path)
+print([(session.session_id, len(events)) for session, events in sessions])
+PY
+```
+
+### Serato 抽出の動作確認
+
+`assets/fixtures/serato/_Serato_/` に crate（History）と logs の最小データを追加済みです。CLI から Serato だけを対象に動かし、`--serato-root` と `--timeline-estimate` を指定すると、時刻の欠損を推定したセッションも含めて JSON/TXT/CSV が生成されます。
+
+```bash
+python -m playlog_cli run \
+  --apps serato \
+  --serato-root "$(pwd)/assets/fixtures/serato/_Serato_" \
+  --serato-mode auto \
+  --timeline-estimate \
+  --formats json,txt \
+  --tz UTC
+```
+
+- `--serato-mode crate` を明示すれば `_Serato_/History/*.crate` のみを解析します。`mode=auto` は crate を優先し、失敗時に `_Serato_/Logs` をフォールバックとして読み取ります。
+- logs モードでは `Session Start @ ...` 行や `HH:MM:SS<TAB>Deck 1<TAB>Artist - Title` のような行だけを手掛かりにするため、取得できるフィールドが少ない / 欠損することがあります。その場合は `info` レベルの NDJSON ログに欠損理由を残し、`played_at` を best-effort で埋めます。
+- crate に絶対時刻が含まれない場合でも `--timeline-estimate` を有効にすると、ファイル名や更新日時から 22:00 をアンカーとして推定 `played_at` を付与し、`timeline_mode=estimated` のセッションとして出力されます。
 
 ### ローカル環境の最短セットアップ
 

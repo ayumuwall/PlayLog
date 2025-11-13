@@ -5,7 +5,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
-from playlog import NightSession, PlayEvent, floor_by_cutoff, get_timezone, sanitize_path_component
+from playlog import (
+    NightSession,
+    PlayEvent,
+    PlaylogConfig,
+    floor_by_cutoff,
+    get_timezone,
+    sanitize_path_component,
+)
 from pydantic import ValidationError
 
 FIXTURE = Path(__file__).parents[3] / "assets" / "fixtures" / "sample_play_events.json"
@@ -44,3 +51,13 @@ def test_sanitize_path_component() -> None:
 def test_night_session_requires_session_id() -> None:
     with pytest.raises(ValidationError):
         NightSession(app="serato", session_id="  ", night_date=datetime.now(timezone.utc).date())
+
+
+def test_playlog_config_normalizes_serato_mode(tmp_path: Path) -> None:
+    config = PlaylogConfig(out_dir=tmp_path, serato_mode="Logs")
+    assert config.serato_mode == "logs"
+
+
+def test_playlog_config_rejects_invalid_serato_mode(tmp_path: Path) -> None:
+    with pytest.raises(ValidationError):
+        PlaylogConfig(out_dir=tmp_path, serato_mode="invalid-mode")

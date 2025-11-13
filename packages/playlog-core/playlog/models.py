@@ -84,11 +84,29 @@ class PlaylogConfig(BaseModel):
     timezone: str = Field(default="UTC")
     timeline_estimate: bool = False
     redact_paths: bool = False
+    serato_root: Path | None = None
+    serato_mode: str = "auto"
 
     @field_validator("out_dir")
     @classmethod
     def _expand_home(cls, value: Path) -> Path:
         return value.expanduser().resolve()
+
+    @field_validator("serato_root")
+    @classmethod
+    def _expand_serato_root(cls, value: Path | None) -> Path | None:
+        if value is None:
+            return None
+        return value.expanduser().resolve()
+
+    @field_validator("serato_mode")
+    @classmethod
+    def _normalize_serato_mode(cls, value: str) -> str:
+        normalized = value.lower()
+        if normalized not in {"auto", "crate", "logs"}:
+            msg = "serato_mode must be one of auto|crate|logs"
+            raise ValueError(msg)
+        return normalized
 
 
 def sanitize_path_component(value: str, replacement: str = "_") -> str:
